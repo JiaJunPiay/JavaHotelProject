@@ -1,3 +1,6 @@
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
@@ -46,6 +49,7 @@ class Customer{
 class Room{
 	private String roomID;
 	private String roomName;
+	private float roomRate;
 
 	public Room() {
 		super();
@@ -80,15 +84,15 @@ class Booking{
 	private int bookingId;
 	private String username;
 	private String roomId;
-	private String startDate;
-	private String endDate;
+	private Date startDate;
+	private Date endDate;
 	
 	public Booking() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public Booking( String username, String roomId, String startDate, String endDate) {
+	public Booking( String username, String roomId, Date startDate, Date endDate) {
 		bookingId = count.getAndIncrement();
 		this.username = username;
 		this.roomId = roomId;
@@ -117,19 +121,19 @@ class Booking{
 		this.roomId = roomId;
 	}
 
-	public String getStartDate() {
+	public Date getStartDate() {
 		return startDate;
 	}
 
-	public void setStartDate(String startDate) {
+	public void setStartDate(Date startDate) {
 		this.startDate = startDate;
 	}
 
-	public String getEndDate() {
+	public Date getEndDate() {
 		return endDate;
 	}
 
-	public void setEndDate(String endDate) {
+	public void setEndDate(Date endDate) {
 		this.endDate = endDate;
 	}
 
@@ -145,8 +149,9 @@ class Site{
 	void printMenu() {
 		System.out.println("1. To check your booking");
 		System.out.println("2. To book a room");
-		System.out.println("3. To cancel a booking");
-		System.out.println("4. To exit Hotel Reservation");
+		System.out.println("3. To edit a booking");
+		System.out.println("4. To cancel a booking");
+		System.out.println("5. To exit Hotel Reservation");
 	}
 	
 	boolean loginCheck(ArrayList<Customer> ac, String u, String p) {
@@ -160,13 +165,15 @@ class Site{
 	
 	int checkBooking(ArrayList<Booking> ab,  ArrayList<Room> ar, String un) {
 		int count = 0;
+		DateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+		
 		System.out.println("Bookings for " + un);
-		System.out.println("BookingID	Booking Room	Start Date	EndDate");
+		System.out.println("BookingID	Booking Room	Start Date	End Date");
 		System.out.println("---------------------------------------------------------------");
 		for(Booking b:ab) {
 			if(b.getUsername().equals(un)) {
 				String roomName = getRoomByID(ar, b.getRoomId());
-				System.out.println(b.getBookingId()+"		"+ roomName +"		"+ b.getStartDate() + "	" + b.getEndDate());
+				System.out.println(b.getBookingId()+"		"+ roomName +"		"+ formatter.format(b.getStartDate()) + "	" + formatter.format(b.getEndDate()));
 				count++;
 			}
 		}
@@ -187,45 +194,139 @@ class Site{
 		return null;
 	}
 
-	ArrayList<Booking> bookRoom(ArrayList<Booking> ab, ArrayList<Room> ah, String un) {
+	void bookRoom(ArrayList<Booking> ab, ArrayList<Room> ah, String un) {
 		Scanner scan = new Scanner(System.in);
+		
 		System.out.println("Room ID		Rooms Available");
 		for(Room r:ah) {
 			System.out.println(r.getRoomID()+"			"+r.getRoomName());
 		}
 		System.out.print("Enter the room id you would like to book : ");
 		String room = scan.next();
+		String checkValid = getRoomByID(ah, room);
+		while(checkValid == null) {
+			System.out.print("Invalid room id, Please try again : ");
+			room = scan.next();
+			checkValid = getRoomByID(ah, room);
+		}
 		
-		System.out.print("Please enter the start date you would like to book (dd/mm/yyyy) : ");
-		String startDate = scan.next();
-		
-		System.out.print("Please enter the end date you would like to book (dd/mm/yyyy) : ");
-		String endDate = scan.next();
-		
-		Booking b = new Booking(un, room, startDate, endDate);
-		ab.add(b);
-		System.out.println("Your booking has been added!");
-		return ab;
+		try {
+			
+			System.out.print("Please enter the start date you would like to book (dd/mm/yyyy) (01/01/2000)  : ");
+			String startDateString = scan.next();
+			Date startDate = new SimpleDateFormat("dd/MM/yyyy").parse(startDateString);
+			
+			while(startDate.before(new Date()) || startDate.equals(new Date())) {
+				System.out.print("Invalid start date! Please enter the end date you would like to book (dd/mm/yyyy) (01/01/2000) : ");
+				startDateString = scan.next();
+				startDate = new SimpleDateFormat("dd/MM/yyyy").parse(startDateString); 
+			}
+			
+			System.out.print("Please enter the end date you would like to book (dd/mm/yyyy) (01/01/2000) : ");
+			String endDateString = scan.next();
+			Date endDate = new SimpleDateFormat("dd/MM/yyyy").parse(endDateString); 
+			
+			while(endDate.before(startDate) || endDate.equals(startDate)) {
+				System.out.print("Invalid end date! Please enter the end date you would like to book (dd/mm/yyyy) (01/01/2000) : ");
+				endDateString = scan.next();
+				endDate = new SimpleDateFormat("dd/MM/yyyy").parse(endDateString); 
+			}
+			
+			Booking b = new Booking(un, room, startDate, endDate);
+			ab.add(b);
+			System.out.println("Your booking has been added!");
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Invalid Date Format! Please try again!");
+			//e.printStackTrace();
+		}  
 		
 	}
 	
-	ArrayList<Booking> removeBooking(ArrayList<Booking> ab, ArrayList<Room> ah, String un) {
+	void editBooking(ArrayList<Booking> ab, ArrayList<Room> ah, String un) {
+		Scanner scan = new Scanner(System.in);
+		int count = checkBooking(ab, ah, un);
+		try {
+			if(count > 0) {
+				System.out.print("Enter booking id you would like to edit : ");
+				int id = scan.nextInt();
+				int bookCount = 0;
+				for(Booking b:ab) {
+					if(b.getBookingId() == id && b.getUsername().equals(un)) {
+						
+						System.out.print("Please enter the start date you would like to edit (dd/mm/yyyy) (01/01/2000)  : ");
+						String startDateString = scan.next();
+						Date startDate;
+						
+							startDate = new SimpleDateFormat("dd/MM/yyyy").parse(startDateString);
+						
+						
+						while(startDate.before(new Date()) || startDate.equals(new Date())) {
+							System.out.print("Invalid start date! Please enter the end date you would like to book (dd/mm/yyyy) (01/01/2000) : ");
+							startDateString = scan.next();
+							startDate = new SimpleDateFormat("dd/MM/yyyy").parse(startDateString); 
+						}
+						
+						System.out.print("Please enter the end date you would like to book (dd/mm/yyyy) (01/01/2000) : ");
+						String endDateString = scan.next();
+						Date endDate = new SimpleDateFormat("dd/MM/yyyy").parse(endDateString); 
+						
+						while(endDate.before(startDate) || endDate.equals(startDate)) {
+							System.out.print("Invalid end date! Please enter the end date you would like to book (dd/mm/yyyy) (01/01/2000) : ");
+							endDateString = scan.next();
+							endDate = new SimpleDateFormat("dd/MM/yyyy").parse(endDateString); 
+						}
+						
+						b.setStartDate(startDate);
+						b.setEndDate(endDate);
+						
+						break;
+						
+					}
+					else {
+						bookCount++;
+					}
+				}
+				
+				if(bookCount == ab.size())
+					System.out.println("You do not have such booking. Please try again");
+			}
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Invalid Date Format! Please try again!");
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
+	void removeBooking(ArrayList<Booking> ab, ArrayList<Room> ah, String un) {
 		Scanner scan = new Scanner(System.in);
 		
 		int count = checkBooking(ab, ah, un);
-
-		if(count > 0) {
-			System.out.print("Enter the booking id you want to cancel : ");
-			int bookingId = scan.nextInt();
-			for(Booking b:ab) {
-				if(b.getBookingId() == bookingId) {
-					ab.remove(b);
-					System.out.println("Booking has been cancelled!");
-					return ab;
+		try {
+			boolean remove = false;
+			if(count > 0) {
+				System.out.print("Enter the booking id you want to cancel : ");
+				int bookingId = scan.nextInt();
+				for(Booking b:ab) {
+					if(b.getBookingId() == bookingId) {
+						ab.remove(b);
+						remove = true;
+					}
 				}
 			}
+			if(remove) {
+				System.out.println("Booking has been cancelled!");
+			}
+			else {
+				System.out.println("Booking id does not exist!!");
+			}
+
 		}
-		return null;
+		catch(Exception e) {
+			System.out.println("Error with the removal of booking!");
+		}
 	}
 
 	void startSite() {
@@ -238,6 +339,9 @@ class Site{
 		ac.add(c1);
 		Customer c2 = new Customer("un2", "pw2");
 		ac.add(c2);
+		Customer c3 = new Customer("un3", "pw3");
+		ac.add(c3);
+
 
 		Room r1 = new Room("1234","Room A");
 		ar.add(r1);
@@ -245,15 +349,22 @@ class Site{
 		ar.add(r2);
 		Room r3 = new Room("1235","Room C");
 		ar.add(r3);
-
-		Booking b1 = new Booking("un1","1234","25/04/2021", "26/04/2021");
-		ab.add(b1);
-		Booking b2 = new Booking("un2","4321","25/04/2021", "26/04/2021");
-		ab.add(b2);
+		
+		DateFormat formatter1 = new SimpleDateFormat("dd/MM/yyyy");
+		try {
+			Date d1 = formatter1.parse("26/05/2021");
+			Date d2 = formatter1.parse("27/05/2021");
+			
+			Booking b1 = new Booking("un1","1234",d1, d2);
+			ab.add(b1);
+			Booking b2 = new Booking("un2","4321", d1, d2);
+			ab.add(b2);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		System.out.println("Welcome to Hotel Reservation!");
-
-
 		int attempt = 0;
 		Boolean valid = false;
 
@@ -262,12 +373,12 @@ class Site{
 			String u = scan.next();
 			System.out.print("Please enter your password : ");
 			String p = scan.next();
-
+			
 			valid = loginCheck(ac, u, p);
+			
 			if(valid) {
 				boolean exit = false;
 				while(!exit) {
-
 					int option = 0;
 					printMenu();
 					System.out.print("Select your option : ");
@@ -277,12 +388,15 @@ class Site{
 							checkBooking(ab, ar, u);
 							break;
 						case 2:
-							ab = bookRoom(ab, ar, u);
+							bookRoom(ab, ar, u);
 							break;
 						case 3:
-							ab = removeBooking(ab, ar, u);
+							editBooking(ab, ar, u);
 							break;
 						case 4:
+							removeBooking(ab, ar, u);
+							break;
+						case 5:
 							exit = true;
 							break;
 						default:
@@ -291,8 +405,9 @@ class Site{
 				}
 			}
 			else {
-				System.out.println("Invalid Login! Attempted " + (attempt+1) + "/3" );
-				attempt ++;
+				attempt++;
+				System.out.println("Invalid Login! Attempted " + attempt + "/3" );
+				
 			}
 		}
 		System.out.println("System exited.... Goodbye!");
@@ -300,12 +415,9 @@ class Site{
 }
 
 public class BookingSite {
-
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		Site s = new Site();
 		s.startSite();
-
 	}
-
 }

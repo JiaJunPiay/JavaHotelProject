@@ -23,6 +23,7 @@ class Customer{
 	public String getUsername() {
 		return username;
 	}
+	/*
 	public void setUsername(String username) {
 		this.username = username;
 	}
@@ -32,12 +33,14 @@ class Customer{
 	public void setPassword(String password) {
 		this.password = password;
 	}
+	
 
 	@Override
 	public String toString() {
 		return "Customer [username=" + username + ", password=" + password + "]";
 	}
-
+	*/
+	
 	public boolean checkValidUser(String u, String p) {
 		if(username.equals(u) && password.equals(p)) {
 			return true;
@@ -56,10 +59,11 @@ class Room{
 		// TODO Auto-generated constructor stub
 	}
 
-	public Room(String roomID, String roomName) {
+	public Room(String roomID, String roomName, int roomRate) {
 		super();
 		this.roomID = roomID;
 		this.roomName = roomName;
+		this.roomRate = roomRate;
 	}
 
 	public String getRoomID() {
@@ -77,6 +81,15 @@ class Room{
 	public void setRoomName(String roomName) {
 		this.roomName = roomName;
 	}
+
+	public float getRoomRate() {
+		return roomRate;
+	}
+
+	public void setRoomRate(float roomRate) {
+		this.roomRate = roomRate;
+	}
+	
 }
 
 class Booking{
@@ -142,7 +155,6 @@ class Booking{
 		return "Booking [bookingId=" + bookingId + ", username=" + username + ", roomId=" + roomId + ", startDate="
 				+ startDate + ", endDate=" + endDate + "]";
 	}
-
 }
 
 class Site{
@@ -197,9 +209,9 @@ class Site{
 	void bookRoom(ArrayList<Booking> ab, ArrayList<Room> ah, String un) {
 		Scanner scan = new Scanner(System.in);
 		
-		System.out.println("Room ID		Rooms Available");
+		System.out.println("Room ID		Rooms Available	Room Rate");
 		for(Room r:ah) {
-			System.out.println(r.getRoomID()+"			"+r.getRoomName());
+			System.out.println(r.getRoomID()+"			"+r.getRoomName()+"	"+r.getRoomRate());
 		}
 		System.out.print("Enter the room id you would like to book : ");
 		String room = scan.next();
@@ -231,6 +243,7 @@ class Site{
 				endDateString = scan.next();
 				endDate = new SimpleDateFormat("dd/MM/yyyy").parse(endDateString); 
 			}
+			
 			
 			Booking b = new Booking(un, room, startDate, endDate);
 			ab.add(b);
@@ -298,8 +311,6 @@ class Site{
 		}
 	}
 	
-	
-	
 	void removeBooking(ArrayList<Booking> ab, ArrayList<Room> ah, String un) {
 		Scanner scan = new Scanner(System.in);
 		
@@ -343,11 +354,11 @@ class Site{
 		ac.add(c3);
 
 
-		Room r1 = new Room("1234","Room A");
+		Room r1 = new Room("1234","Room A", 250);
 		ar.add(r1);
-		Room r2 = new Room("4321","Room B");
+		Room r2 = new Room("4321","Room B", 500);
 		ar.add(r2);
-		Room r3 = new Room("1235","Room C");
+		Room r3 = new Room("1235","Room C", 1000);
 		ar.add(r3);
 		
 		DateFormat formatter1 = new SimpleDateFormat("dd/MM/yyyy");
@@ -366,7 +377,7 @@ class Site{
 
 		System.out.println("Welcome to Hotel Reservation!");
 		int attempt = 0;
-		Boolean valid = false;
+		boolean valid = false;
 
 		while(attempt < 3 && valid == false) {
 			System.out.print("Please enter your username : ");
@@ -407,6 +418,7 @@ class Site{
 			else {
 				attempt++;
 				System.out.println("Invalid Login! Attempted " + attempt + "/3" );
+				System.out.println();
 				
 			}
 		}
